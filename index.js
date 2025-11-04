@@ -1,0 +1,106 @@
+const express = require('express');
+const cors = require('cors');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const app = express();
+const port = process.env.PORT || 3000;
+
+//middleware
+app.use(cors());
+app.use(express.json());
+
+//credentials
+//smart-deals-user
+// XODwqIlipY3g1azM
+
+// connection string
+const uri = "mongodb+srv://smart-deals-user:XODwqIlipY3g1azM@ta.qolps9k.mongodb.net/?appName=TA";
+
+//client
+const client = new MongoClient(uri, {
+    serverApi: {
+        version: ServerApiVersion.v1,
+        strict: true,
+        deprecationErrors: true,
+    }
+});
+
+async function run() {
+    try{
+        //connecting  the client to the server
+        await client.connect();                           
+        
+        //getting the database
+        const db = client.db('smart_deals_db');
+
+        //getting the table/collection
+        const productsCollection = db.collection('products');
+
+        //APIs with data from database------------
+
+            //create api
+        app.post('/products', async (req, res) => {
+            const newProduct = req.body;
+            const result = await productsCollection.insertOne(newProduct);
+            res.send(result);
+        })
+
+            //read api
+        app.get('/products', async (req, res) => {
+            const cursor = productsCollection.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
+            //single data read api
+        app.get('/products/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await productsCollection.findOne(query);
+            res.send(result);
+        })
+
+            //update api
+        app.patch('/products/:id', async (req, res) => {
+            const id = req.params.id;                           //getting product id from route
+            const query = { _id: new ObjectId(id) };            //making query which product will be updated
+            const updatedProduct = req.body;                    //getting latest data from frontend
+            const update = {                                    //making data $set object to pass in function
+                // $set: updatedProduct;
+                $set: {
+                    name: updatedProduct.name,
+                    price: updatedProduct.price
+                }
+            }
+            
+            const result = await productsCollection.updateOne( query, update );         //updating command
+            res.send(result);                                                           //sending response
+        })
+
+            //delete api
+        app.delete('/products/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await productsCollection.deleteOne(query);
+            res.send(result);
+        })
+
+
+        //sending ping to  confirm a successful connection
+        await client.db("admin").command({ ping: 1 });      
+        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+
+    }
+    finally{
+
+    }
+}
+run().catch( console.dir );
+
+//APIs
+app.get('/', (req, res) => {
+    res.send('Smart deals server is up and runnig')
+})
+
+app.listen(port, () => {
+    console.log(`Smart deals server is running on port: ${port}`)
+})
