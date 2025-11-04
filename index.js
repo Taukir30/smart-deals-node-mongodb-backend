@@ -34,9 +34,9 @@ async function run() {
 
         //getting the table/collection
         const productsCollection = db.collection('products');
+        const bidCollection = db.collection('bids');
 
-        //APIs with data from database------------
-
+        //Products APIs with data from database------------
             //create api
         app.post('/products', async (req, res) => {
             const newProduct = req.body;
@@ -46,7 +46,12 @@ async function run() {
 
             //read api
         app.get('/products', async (req, res) => {
-            const cursor = productsCollection.find();
+            const email = req.query.email;
+            const query = {};
+            if(email){
+                query.email = email;
+            }
+            const cursor = productsCollection.find(query);
             const result = await cursor.toArray();
             res.send(result);
         })
@@ -81,6 +86,34 @@ async function run() {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await productsCollection.deleteOne(query);
+            res.send(result);
+        })
+
+        //bid related apis-----------
+            //bid read api
+        app.get('/bids', async (req, res) => {
+            const email = req.query.email;
+            const query = {};
+            if(email){
+                query.bidder_email = email;
+            }
+            const cursor = bidCollection.find(query);
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
+            //bid create api
+        app.post('/bids', async (req, res) => {
+            const newBid = req.body;
+            const result = await bidCollection.insertOne(newBid);
+            res.send(result);
+        })
+
+            //bid delete api
+        app.delete('/bids/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: id};
+            const result = await bidCollection.deleteOne(query);
             res.send(result);
         })
 
