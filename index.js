@@ -75,10 +75,17 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/latest-products', async (req, res) => {
+            const cursor = productsCollection.find().sort({created_at: -1}).limit(6);
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
             //single data read api
         app.get('/products/:id', async (req, res) => {
             const id = req.params.id;
-            const query = { _id: new ObjectId(id) };
+            // const query = { _id: new ObjectId(id) };
+            const query = { _id: id };
             const result = await productsCollection.findOne(query);
             res.send(result);
         })
@@ -86,7 +93,8 @@ async function run() {
             //update api
         app.patch('/products/:id', async (req, res) => {
             const id = req.params.id;                           //getting product id from route
-            const query = { _id: new ObjectId(id) };            //making query which product will be updated
+            // const query = { _id: new ObjectId(id) };            //making query which product will be updated
+            const query = { _id: id };                           //making query which product will be updated
             const updatedProduct = req.body;                    //getting latest data from frontend
             const update = {                                    //making data $set object to pass in function
                 // $set: updatedProduct;
@@ -103,7 +111,8 @@ async function run() {
             //delete api
         app.delete('/products/:id', async (req, res) => {
             const id = req.params.id;
-            const query = { _id: new ObjectId(id) };
+            // const query = { _id: new ObjectId(id) };
+            const query = { _id: id };
             const result = await productsCollection.deleteOne(query);
             res.send(result);
         })
